@@ -1,20 +1,19 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Data;
-using System.Threading;
 using NBO.Test.Framework;
 
 namespace SQLPerf
 {
     public class SQLPerfExecutor
     {
-        private string SQLPerfStatsTableName = "__SQLPerfStats";
+        private const string SqlPerfStatsTableName = "__SQLPerfStats";
         private SqlExecutor _sqlExecutor;
+        private BackgroundWorker _worker;
 
         public delegate void DisplayOutputTextEventHandler(string outputTextToAdd, bool clearPreviousText);
         public event DisplayOutputTextEventHandler DisplayOutputTextEvent;
 
-        private BackgroundWorker _worker;
 
         public delegate void WorkerCompleted();
         public event WorkerCompleted OnWorkerCompleted;
@@ -27,21 +26,12 @@ namespace SQLPerf
         private void InitializeBackgroundWorker()
         {
             _worker = new BackgroundWorker();
-//            _worker.WorkerSupportsCancellation = true;
 
             _worker.DoWork += new DoWorkEventHandler(backgroundWorker_DoWork);
             _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(backgroundWorker1_RunWorkerCompleted);
 
             _worker.WorkerReportsProgress = true;
-//            _worker.ProgressChanged += new ProgressChangedEventHandler(backgroundWorker1_ProgressChanged);
         }
-
-/*
-        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            OutputText($"backgroundWorker is starting: {DateTime.Now}", false);
-        }
-*/
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
@@ -54,19 +44,18 @@ namespace SQLPerf
 
             try
             {
-                for (var i = 1; i <= workerParam.numberOfIteration; i++)
+                for (var i = 1; i <= workerParam.NumberOfIterations; i++)
                 {
-                    OutputText($"backgroundWorker is starting run {i} of {workerParam.numberOfIteration} at {DateTime.Now}", false);
+                    OutputText($"backgroundWorker is starting run {i} of {workerParam.NumberOfIterations} at {DateTime.Now}", false);
 
                     _sqlExecutor.FreeProcCache();
-                    _sqlExecutor.ExecSql(workerParam.tSQLToExecute);
-                    _sqlExecutor.CollectProcStatistics(i == 1, $"SQLPerf #{i}", _sqlExecutor.ConnectionProvider.GetInitialCatalog(), SQLPerfStatsTableName);
+                    _sqlExecutor.ExecSql(workerParam.SqlToExecute);
+                    _sqlExecutor.CollectProcStatistics(i == 1, $"RUN #{i}", _sqlExecutor.ConnectionProvider.GetInitialCatalog(), SqlPerfStatsTableName);
 
-                    Thread.Sleep(1000 * 1); // for some reason I sometimes lose rows in CollectProcStatistics
-                    OutputText($"backgroundWorker has completed run {i} of {workerParam.numberOfIteration} at {DateTime.Now}", false);
+                    OutputText($"backgroundWorker has completed run {i} of {workerParam.NumberOfIterations} at {DateTime.Now}", false);
                 }
 
-                var perfStats = _sqlExecutor.Fill($"SELECT * FROM dbo.{SQLPerfStatsTableName}").Tables[0];
+                var perfStats = _sqlExecutor.Fill($"SELECT * FROM dbo.{SqlPerfStatsTableName}").Tables[0];
                 CreateAverageRow(perfStats);
 
                 _sqlExecutor.WriteCsvFile(perfStats, "SQLPerf.csv", ",");
@@ -83,7 +72,6 @@ namespace SQLPerf
         {
             var numberOfRowsToAverage = perfStats.Rows.Count;
 
-            // blank row for prettiness
             var dr = perfStats.NewRow();
             foreach (DataColumn currentCol in perfStats.Columns)
             {
@@ -127,25 +115,19 @@ namespace SQLPerf
                 }
             }
 
-            var blankRow = perfStats.NewRow();
-            perfStats.Rows.Add(blankRow);
-            perfStats.AcceptChanges();
-
+            dr["test"] = "AVERAGE";
             perfStats.Rows.Add(dr);
             perfStats.AcceptChanges();
         }
 
-        public void Run(string connectionString, string tSQLToExecute, int numberOfIterations)
+        public void Run(string connectionString, string sqlToExecute, int numberOfIterations)
         {
             var sqlTestConnectionProvider = new SqlConnectionProvider(connectionString);
             _sqlExecutor = new SqlExecutor(sqlTestConnectionProvider);
 
-
-            var workerParams = new WorkerParams(tSQLToExecute, numberOfIterations);
+            var workerParams = new WorkerParams(sqlToExecute, numberOfIterations);
 
             _worker.RunWorkerAsync(workerParams);
-
-//            _sqlExecutor.ExecSql(tSQLToExecute);
         }
 
         private void OutputText(string text, bool clearPreviousText)
@@ -155,13 +137,13 @@ namespace SQLPerf
 
         private class WorkerParams
         {
-            public string tSQLToExecute;
-            public int numberOfIteration;
+            public readonly string SqlToExecute;
+            public readonly int NumberOfIterations;
 
-            public WorkerParams(string tSqlToExecute, int numberOfIteration)
+            public WorkerParams(string sqlToExecuteParam, int numberOfIterationsParam)
             {
-                tSQLToExecute = tSqlToExecute;
-                this.numberOfIteration = numberOfIteration;
+                SqlToExecute = sqlToExecuteParam;
+                NumberOfIterations = numberOfIterationsParam;
             }
         }
     }

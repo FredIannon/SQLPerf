@@ -426,8 +426,9 @@ namespace NBO.Test.Framework
             sql.AppendLine("  CREATE TABLE " + targetDatabase + ".[dbo]." + targetTable + "( ");
             sql.AppendLine("    [test] [nvarchar](200) NOT NULL, ");
             sql.AppendLine("    [name] [nvarchar](200), ");
-            sql.AppendLine("    [execution_count] [int] NOT NULL, ");
             sql.AppendLine("    [total_elapsed_time_SECONDS] [float] NOT NULL, ");
+            sql.AppendLine("    [avg_physical_reads] [bigint] NOT NULL, ");
+            sql.AppendLine("    [execution_count] [int] NOT NULL, ");
             sql.AppendLine("    [total_elapsed_time] [bigint] NOT NULL, ");
             sql.AppendLine("    [total_cpu_time] [bigint] NOT NULL, ");
             sql.AppendLine("    [total_logical_reads] [bigint] NOT NULL, ");
@@ -441,7 +442,6 @@ namespace NBO.Test.Framework
             sql.AppendLine("    [avg_logical_reads] [bigint] NOT NULL, ");
             sql.AppendLine("    [min_logical_reads] [bigint] NOT NULL, ");
             sql.AppendLine("    [max_logical_reads] [bigint] NOT NULL, ");
-            sql.AppendLine("    [avg_physical_reads] [bigint] NOT NULL, ");
             sql.AppendLine("    [min_physical_reads] [bigint] NOT NULL, ");
             sql.AppendLine("    [max_physical_reads] [bigint] NOT NULL, ");
             sql.AppendLine("    [avg_logical_writes] [bigint] NOT NULL, ");
@@ -457,8 +457,9 @@ namespace NBO.Test.Framework
             sql.AppendLine("INSERT INTO " + targetDatabase + ".dbo." + targetTable + " (");
             sql.AppendLine("    [test], ");
             sql.AppendLine("    [name], ");
-            sql.AppendLine("    [execution_count], ");
             sql.AppendLine("    [total_elapsed_time_SECONDS], ");
+            sql.AppendLine("    [avg_physical_reads], ");
+            sql.AppendLine("    [execution_count], ");
             sql.AppendLine("    [total_elapsed_time], ");
             sql.AppendLine("    [total_cpu_time], ");
             sql.AppendLine("    [total_logical_reads], ");
@@ -472,7 +473,6 @@ namespace NBO.Test.Framework
             sql.AppendLine("    [avg_logical_reads], ");
             sql.AppendLine("    [min_logical_reads], ");
             sql.AppendLine("    [max_logical_reads], ");
-            sql.AppendLine("    [avg_physical_reads], ");
             sql.AppendLine("    [min_physical_reads], ");
             sql.AppendLine("    [max_physical_reads], ");
             sql.AppendLine("    [avg_logical_writes], ");
@@ -483,8 +483,9 @@ namespace NBO.Test.Framework
             sql.AppendLine("SELECT ");
             sql.AppendLine("  '" + taskName + "', ");
             sql.AppendLine("  o.name,  ");
-            sql.AppendLine("  SUM(s.execution_count) execution_count, ");
             sql.AppendLine("  SUM(s.total_elapsed_time) / 1000000.0 [total_elapsed_time_SECONDS], ");
+            sql.AppendLine("  SUM(s.total_physical_reads)/SUM(s.execution_count) [avg_physical_reads], ");
+            sql.AppendLine("  SUM(s.execution_count) execution_count, ");
             sql.AppendLine("  SUM(s.total_elapsed_time) [total_elapsed_time], ");
             sql.AppendLine("  SUM(s.total_worker_time) [total_cpu_time], ");
             sql.AppendLine("  SUM(s.total_logical_reads) [total_logical_reads], ");
@@ -498,7 +499,6 @@ namespace NBO.Test.Framework
             sql.AppendLine("  SUM(s.total_logical_reads)/SUM(s.execution_count) [avg_logical_reads], ");
             sql.AppendLine("  MIN(s.min_logical_reads) min_logical_reads, ");
             sql.AppendLine("  MAX(s.max_logical_reads) max_logical_reads, ");
-            sql.AppendLine("  SUM(s.total_physical_reads)/SUM(s.execution_count) [avg_physical_reads], ");
             sql.AppendLine("  MIN(s.min_physical_reads) min_physical_reads, ");
             sql.AppendLine("  MAX(s.max_physical_reads) max_physical_reads, ");
             sql.AppendLine("  SUM(s.total_logical_writes)/SUM(s.execution_count) [avg_logical_writes], ");

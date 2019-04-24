@@ -114,7 +114,7 @@
             this.Controls.Add(this.TSQLToExecute);
             this.Controls.Add(this.btnRunIt);
             this.Name = "SQLPerf";
-            this.Text = "Form1";
+            this.Text = "SQLPerf";
             this.ResumeLayout(false);
             this.PerformLayout();
 

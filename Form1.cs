@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace SQLPerf
 {
     public partial class SQLPerf : Form
     {
-        SQLPerfExecutor _sqlPerfExecutor;
+        readonly SQLPerfExecutor _sqlPerfExecutor;
         public delegate void UpdateOutputTextDelegate(string outputTextToAdd, bool clearPreviousText);
 
         public SQLPerf()
@@ -50,24 +49,16 @@ namespace SQLPerf
             btnRunIt.Enabled = false;
 
             var numberOfIterationsToExecute = Convert.ToInt32(numberOfIterations.Text);
-//            var sqlPerfExecutor = new SQLPerfExecutor(connectionString.Text);
 
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-
-//                _sqlPerfExecutor.OnWorkerCompleted += SqlPerfExecutorOnOnWorkerCompleted;
-//                sqlPerfExecutor.DisplayOutputTextEvent += SqlPerfExecutorOnDisplayOutputTextEvent;
                 _sqlPerfExecutor.Run(connectionString.Text, TSQLToExecute.Text, numberOfIterationsToExecute);
             }
             catch (Exception ex)
             {
                 OutputTxtBox.Text = ex.ToString();
                 SqlPerfExecutorOnOnWorkerCompleted();
-            }
-            finally
-            {
-//                sqlPerfExecutor.DisplayOutputTextEvent -= SqlPerfExecutorOnDisplayOutputTextEvent;
             }
         }
 
@@ -80,44 +71,15 @@ namespace SQLPerf
 
         private void SqlPerfExecutorOnDisplayOutputTextEvent(string outputTextToAdd, bool clearPreviousText)
         {
-            // FTI - TODO : Try this out...
-/*
-            if (InvokeRequired)
-            {
-                Invoke((Action<string, bool>)SqlPerfExecutorOnDisplayOutputTextEvent, outputTextToAdd, clearPreviousText);
-                return;
-            }
-*/
-
             try
             {
-//                if (OutputTxtBox.InvokeRequired)
-                if (this.InvokeRequired)
+                if (InvokeRequired)
                 {
-                    this.Invoke(new UpdateOutputTextDelegate(UpdateOutputText), new object[] { outputTextToAdd, clearPreviousText });
-
-/*
-                        this.Invoke(new MethodInvoker(delegate {
-                        if (clearPreviousText)
-                        {
-                            OutputTxtBox.Text = string.Empty;
-                        }
-
-                        OutputTxtBox.Text += outputTextToAdd + Environment.NewLine;
-                    }));
-*/
+                    Invoke(new UpdateOutputTextDelegate(UpdateOutputText), outputTextToAdd, clearPreviousText);
                 }
                 else
                 {
                     UpdateOutputText(outputTextToAdd, clearPreviousText);
-/*
-                    if (clearPreviousText)
-                    {
-                        OutputTxtBox.Text = string.Empty;
-                    }
-
-                    OutputTxtBox.Text += outputTextToAdd + Environment.NewLine;
-*/
                 }
             }
             catch (Exception e)
@@ -135,7 +97,6 @@ namespace SQLPerf
             }
 
             OutputTxtBox.Text += outputTextToAdd + Environment.NewLine;
-
         }
     }
 }
