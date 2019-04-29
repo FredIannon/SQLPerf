@@ -46,13 +46,11 @@ namespace SQLPerf
             {
                 for (var i = 1; i <= workerParam.NumberOfIterations; i++)
                 {
-                    OutputText($"backgroundWorker is starting run {i} of {workerParam.NumberOfIterations} at {DateTime.Now}", false);
-
                     _sqlExecutor.FreeProcCache();
+                    var startedRunTime = DateTime.Now;
                     _sqlExecutor.ExecSql(workerParam.SqlToExecute);
+                    OutputText($"backgroundWorker executed run {i} of {workerParam.NumberOfIterations}.  Started: {startedRunTime} and Completed: {DateTime.Now}", false);
                     _sqlExecutor.CollectProcStatistics(i == 1, $"RUN #{i}", _sqlExecutor.ConnectionProvider.GetInitialCatalog(), SqlPerfStatsTableName);
-
-                    OutputText($"backgroundWorker has completed run {i} of {workerParam.NumberOfIterations} at {DateTime.Now}", false);
                 }
 
                 var perfStats = _sqlExecutor.Fill($"SELECT * FROM dbo.{SqlPerfStatsTableName}").Tables[0];
